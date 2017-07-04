@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  <h4>{{ selected_place.name }}</h4>
+  <h5>{{ selected_place.category.name }} / {{ selected_place.neighborhood }}</h5>
+  <p>{{ selected_place.description }}</p>
+  {% if selected_place.user_id == session['user_id'] %}
+  	<ul class="list-inline">
+  		<li><a href="{{url_for('editPlace', 
+                             categoryID=selected_place.category.id, 
+                             placeID=selected_place.id)}}">Edit</a></li>
+  		<li><a href="{{url_for('deletePlace',
+                             categoryID=selected_place.category.id, 
+                             placeID=selected_place.id)}}">Delete</a></li>
+  	</ul>
+  {% endif %}
+
+{% endblock %}

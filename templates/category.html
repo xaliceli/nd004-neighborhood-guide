@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  <h4>{{ selected_category.name }}</h4>
+  <p>{{ selected_category.description }}</p>
+  {% for place in selected_places %}
+    <h5><a href="{{ place.id }}/">{{ place.name }}</a></h5>
+  {% endfor %}
+
+{% endblock %}
