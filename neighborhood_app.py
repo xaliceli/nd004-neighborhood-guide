@@ -2,8 +2,10 @@ from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from db_setup import Base, Category, Place
 from user_actions import createUser, getUserID
+from functools import wraps
 from flask import Flask, render_template, request, make_response, session
 from flask import flash, redirect, url_for, jsonify
+from flask_seasurf import SeaSurf
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import random
@@ -12,8 +14,9 @@ import json
 import httplib2
 import requests
 
-app = Flask(__name__)
 APPLICATION_NAME = "Neighborhood Guide"
+app = Flask(__name__)
+csrf = SeaSurf(app)
 
 G_CLIENT_ID = json.loads(
     open('g_client_secrets.json', 'r').read())['web']['client_id']
@@ -29,6 +32,17 @@ db_session = DBSession()
 def renderGuidePage(template, **kwargs):
     categories = db_session.query(Category).order_by(asc(Category.name))
     return render_template(template, categories=categories, **kwargs)
+
+
+# Login requirement decorator
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session['username'] is None:
+            flash('Login required.')
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 @app.route('/')
@@ -48,6 +62,7 @@ def showLogin():
     return renderGuidePage('login.html', STATE=state)
 
 
+@csrf.exempt
 @app.route('/gconnect', methods=['POST'])
 # Google authentication
 def gconnect():
@@ -181,11 +196,10 @@ def gdisconnect():
             json.dumps('Failed to revoke token for given user.'), 400)
         response.headers['Content-Type'] = 'application/json'
         return response
-    flash("You have successfully been logged out.")
     return redirect(url_for('showGuide'))
 
 
-@app.route('/places/<categoryID>/')
+@app.route('/places/<int:categoryID>/')
 # Show list of places by category
 def showCategory(categoryID):
     activeCategory = db_session.query(Category).filter_by(
@@ -197,7 +211,7 @@ def showCategory(categoryID):
                            selected_places=categoryPlaces)
 
 
-@app.route('/places/<categoryID>/<placeID>/')
+@app.route('/places/<int:categoryID>/<int:placeID>/')
 # Show individual place's page
 def showPlace(categoryID, placeID):
     activePlace = db_session.query(Place).filter_by(id=placeID).one()
@@ -206,105 +220,100 @@ def showPlace(categoryID, placeID):
 
 
 @app.route('/places/new/', methods=['GET', 'POST'])
+@login_required
 # Allow logged in user to create a new place to add to guide
 def newPlace():
-    if session['username']:
-        if request.method == 'POST':
-            matched_category = db_session.query(Category).filter_by(
-                name=request.form['category']).one()
-            newPlace = Place(
-                name=request.form['name'],
-                neighborhood=request.form['neighborhood'],
-                description=request.form['description'],
-                category_id=matched_category.id,
-                user_id=session['user_id'])
-            db_session.add(newPlace)
-            flash('New place "%s" successfully created.' % newPlace.name)
-            db_session.commit()
-            return redirect(url_for('showPlace',
-                                    categoryID=newPlace.category_id,
-                                    placeID=newPlace.id))
-        else:
-            return renderGuidePage('newplace.html')
+    if request.method == 'POST':
+        matched_category = db_session.query(Category).filter_by(
+            name=request.form['category']).one()
+        newPlace = Place(
+            name=request.form['name'],
+            neighborhood=request.form['neighborhood'],
+            description=request.form['description'],
+            category_id=matched_category.id,
+            user_id=session['user_id'])
+        db_session.add(newPlace)
+        flash('New place "%s" successfully created.' % newPlace.name)
+        db_session.commit()
+        return redirect(url_for('showPlace',
+                                categoryID=newPlace.category_id,
+                                placeID=newPlace.id))
     else:
-        return redirect(url_for('login'))
+        return renderGuidePage('newplace.html')
 
 
-@app.route('/places/<categoryID>/<placeID>/edit/', methods=['GET', 'POST'])
+@app.route('/places/<int:categoryID>/<int:placeID>/edit/',
+           methods=['GET', 'POST'])
+@login_required
 # Allow logged in user to edit an existing place in guide
 def editPlace(categoryID, placeID):
     activePlace = db_session.query(Place).filter_by(id=placeID).one()
-    if session['username']:
-        if activePlace.user_id == session['user_id']:
-            if request.method == 'POST':
-                if (request.form['name'] and
-                   request.form['name'] != activePlace.name):
-                    activePlace.name = request.form['name']
-                    flash(
-                        'Place name successfully changed to "%s".'
-                        % activePlace.name)
-                if (request.form['neighborhood'] and
-                   request.form['neighborhood'] != activePlace.neighborhood):
-                    activePlace.neighborhood = request.form['neighborhood']
-                    flash(
-                        'Place neighborhood successfully changed to "%s".'
-                        % activePlace.neighborhood)
-                if (request.form['category'] and
-                   request.form['category'] != activePlace.category.name):
-                    matched_category = db_session.query(Category).filter_by(
-                        name=request.form['category']).one()
-                    activePlace.category = matched_category
-                    flash(
-                        'Place category successfully changed to "%s".'
-                        % activePlace.category.name)
-                if (request.form['description'] and
-                   request.form['description'] != activePlace.description):
-                    activePlace.description = request.form['description']
-                    flash(
-                        'Place description successfully changed to "%s".'
-                        % activePlace.description)
-                db_session.add(activePlace)
-                db_session.commit()
-                return redirect(url_for('showPlace',
-                                        categoryID=activePlace.category_id,
-                                        placeID=activePlace.id))
-            else:
-                return renderGuidePage('editplace.html',
-                                       place=activePlace)
-        else:
-            flash(
-                'Error: You do not have permission to edit %s.'
-                % activePlace.name)
+    if activePlace.user_id == session['user_id']:
+        if request.method == 'POST':
+            if (request.form['name'] and
+               request.form['name'] != activePlace.name):
+                activePlace.name = request.form['name']
+                flash(
+                    'Place name successfully changed to "%s".'
+                    % activePlace.name)
+            if (request.form['neighborhood'] and
+               request.form['neighborhood'] != activePlace.neighborhood):
+                activePlace.neighborhood = request.form['neighborhood']
+                flash(
+                    'Place neighborhood successfully changed to "%s".'
+                    % activePlace.neighborhood)
+            if (request.form['category'] and
+               request.form['category'] != activePlace.category.name):
+                matched_category = db_session.query(Category).filter_by(
+                    name=request.form['category']).one()
+                activePlace.category = matched_category
+                flash(
+                    'Place category successfully changed to "%s".'
+                    % activePlace.category.name)
+            if (request.form['description'] and
+               request.form['description'] != activePlace.description):
+                activePlace.description = request.form['description']
+                flash(
+                    'Place description successfully changed to "%s".'
+                    % activePlace.description)
+            db_session.add(activePlace)
+            db_session.commit()
             return redirect(url_for('showPlace',
                                     categoryID=activePlace.category_id,
                                     placeID=activePlace.id))
+        else:
+            return renderGuidePage('editplace.html',
+                                   place=activePlace)
     else:
-        return redirect(url_for('login'))
+        flash(
+            'Error: You do not have permission to edit %s.'
+            % activePlace.name)
+        return redirect(url_for('showPlace',
+                                categoryID=activePlace.category_id,
+                                placeID=activePlace.id))
 
 
-@app.route('/places/<categoryID>/<placeID>/delete/')
+@app.route('/places/<int:categoryID>/<int:placeID>/delete/')
+@login_required
 # Allow logged in user to edit an existing place in guide
 def deletePlace(categoryID, placeID):
     activePlace = db_session.query(Place).filter_by(id=placeID).one()
-    if session['username']:
-        if activePlace.user_id == session['user_id']:
-            db_session.delete(activePlace)
-            flash('%s successfully deleted.' % activePlace.name)
-            db_session.commit()
-            return redirect(url_for('showCategory',
-                                    categoryID=activePlace.category_id))
-        else:
-            flash(
-                'Error: You do not have permission to delete %s.'
-                % activePlace.name)
-            return redirect(url_for('showPlace',
-                                    categoryID=activePlace.category_id,
-                                    placeID=activePlace.id))
+    if activePlace.user_id == session['user_id']:
+        db_session.delete(activePlace)
+        flash('%s successfully deleted.' % activePlace.name)
+        db_session.commit()
+        return redirect(url_for('showCategory',
+                                categoryID=activePlace.category_id))
     else:
-        return redirect(url_for('login'))
+        flash(
+            'Error: You do not have permission to delete %s.'
+            % activePlace.name)
+        return redirect(url_for('showPlace',
+                                categoryID=activePlace.category_id,
+                                placeID=activePlace.id))
 
 
-@app.route('/places/<categoryID>/children/JSON/')
+@app.route('/places/<int:categoryID>/children/JSON/')
 # JSON APIs to view information for all places in a category
 def categoryPlacesJSON(categoryID):
     activeCategory = db_session.query(Category).filter_by(
@@ -314,7 +323,7 @@ def categoryPlacesJSON(categoryID):
     return jsonify(CategoryPlaces=[i.serialize for i in categoryPlaces])
 
 
-@app.route('/places/<categoryID>/self/JSON/')
+@app.route('/places/<int:categoryID>/self/JSON/')
 # JSON APIs to view information for a category
 def categorySelfJSON(categoryID):
     activeCategory = db_session.query(Category).filter_by(
@@ -322,7 +331,7 @@ def categorySelfJSON(categoryID):
     return jsonify(CategorySelf=activeCategory.serialize)
 
 
-@app.route('/places/<categoryID>/<placeID>/JSON/')
+@app.route('/places/<int:categoryID>/<int:placeID>/JSON/')
 # JSON APIs to view information for a place
 def placeJSON(categoryID, placeID):
     activePlace = db_session.query(Place).filter_by(

@@ -25,6 +25,7 @@
       <textarea name="description" class="form-control" rows="10" cols="30"></textarea>
     </div>
     <button type="submit" class="btn btn-default" id="submit" type="submit">Create</button>
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
   </form>
 
 {% endblock %}

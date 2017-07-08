@@ -1,0 +1,144 @@
+{
+  "users": [
+    {
+      "name": "Resident",
+      "email": "name@email.com"
+    }
+  ],
+  "categories": [
+    {
+      "name": "Restaurants",
+      "description": "Places to eat."
+    },
+    {
+      "name": "Stores",
+      "description": "Places to buy things."
+    },
+    {
+      "name": "Cafes",
+      "description": "Places to sit and work over coffee or tea."      
+    },
+    {
+      "name": "Music",
+      "description": "Places to hear live music."
+    },
+    {
+      "name": "Other",
+      "description": "Misc bucket of other interesting places."
+    }
+  ],
+  "places": [
+    {
+      "name": "Bite Kitchen",
+      "neighborhood": "Ukrainian Village",
+      "description": "Quality New American food with an unpretentious vibe. Delicious brunch at reasonable prices. Next door to The Empty Bottle.",
+      "category_id": 1,
+      "user_id": 1
+    },
+    {
+      "name": "Tarboush",
+      "neighborhood": "Wicker Park",
+      "description": "Amazing mediterranean food at low prices. Wraps include tasty pickles. Amazing fries!",
+      "category_id": 1,
+      "user_id": 1
+    },
+    {
+      "name": "Rangoli",
+      "neighborhood": "Humboldt Park",
+      "description": "Indian restaurant with spicy curries. Madras Lamb Curry is delicious and hard to find elsewhere in Chicago.",
+      "category_id": 1,
+      "user_id": 1
+    },
+    {
+      "name": "Le Bouchon",
+      "neighborhood": "Bucktown",
+      "description": "Bustling French bistro with classic dishes. Choose any three courses on Tuesdays for $29.",
+      "category_id": 1,
+      "user_id": 1
+    },
+    {
+      "name": "Reckless Records",
+      "neighborhood": "Wicker Park",
+      "description": "Storied record shop stocking large selection of music. Supposedly the reference point for John Cusack's record shop in High Fidelity.",
+      "category_id": 2,
+      "user_id": 1
+    },
+    {
+      "name": "Myopic Books",
+      "neighborhood": "Wicker Park",
+      "description": "Multi-level used bookstore with diverse selection and nice seating area on the second floor.",
+      "category_id": 2,
+      "user_id": 1
+    },
+    {
+      "name": "The Ark",
+      "neighborhood": "Wicker Park",
+      "description": "Small thrift store with surprising selection of designer items. Frequent sales and daily deals.",
+      "category_id": 2,
+      "user_id": 1
+    },
+    {
+      "name": "Filter",
+      "neighborhood": "Wicker Park",
+      "description": "Large coffeeshop serving all-day food. Plenty of couches and tables.",
+      "category_id": 3,
+      "user_id": 1
+    },
+    {
+      "name": "Wormhole",
+      "neighborhood": "Wicker Park",
+      "description": "Always busy cafe for coffee snobs. Has a Delorean.",
+      "category_id": 3,
+      "user_id": 1
+    },
+    {
+      "name": "Bru",
+      "neighborhood": "Wicker Park",
+      "description": "Coffeeshop plus coworking space. Serves crepes and smoothies.",
+      "category_id": 3,
+      "user_id": 1
+    },
+    {
+      "name": "Caffe Streets",
+      "neighborhood": "Wicker Park",
+      "description": "Chic European-style coffeeshop. Sleek interior, no food.",
+      "category_id": 3,
+      "user_id": 1
+    },
+    {
+      "name": "The Empty Bottle",
+      "neighborhood": "Ukrainian Village",
+      "description": "Boasts \"music friendly dancing.\" Good place to catch local bands as well as Pitchfork's favored band of the day.",
+      "category_id": 4,
+      "user_id": 1
+     },
+     {
+       "name": "The Hideout",
+       "neighborhood": "Goose Island",
+       "description": "Small venue hidden behind warehouses on Goose Island.",
+       "category_id": 4,
+       "user_id": 1
+     },
+     {
+       "name": "Smart Bar",
+       "neighborhood": "Lakeview",
+       "description": "Nightclub with long history of supporting Chicago's house scene. Somewhat out of place next to Wrigleyville's sports bars.",
+       "category_id": 4,
+       "user_id": 1
+     },
+     {
+       "name": "The 606",
+       "neighborhood": "Bucktown to Humboldt Park",
+       "description": "Chicago's own high line, spanning roughly 3 miles. Tons of dog parks along the way!",
+       "category_id": 5,
+       "user_id": 1
+     },
+     {
+       "name": "The Flatiron Building",
+       "neighborhood": "Wicker Park",
+       "description": "Artist studios open to the public every first Friday. Many have dogs!",
+       "category_id": 5,
+       "user_id": 1
+     }
+  ]
+}

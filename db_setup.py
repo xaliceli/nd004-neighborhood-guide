@@ -20,6 +20,7 @@ class Category(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(80), nullable=False)
     description = Column(String(250))
+    places = relationship('Place', cascade='save-update, merge, delete')
 
     @property
     def serialize(self):
@@ -38,9 +39,9 @@ class Place(Base):
     neighborhood = Column(String(80))
     description = Column(String(250))
     category_id = Column(Integer, ForeignKey('category.id'))
-    category = relationship(Category)
+    category = relationship('Category')
     user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship(User)
+    user = relationship('User')
     created = Column(TIMESTAMP, server_default=func.now())
 
     @property
